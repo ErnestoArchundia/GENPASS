@@ -1,0 +1,1 @@
+Sistema web de generación de contraseñas seguras desarrollado con Flask y MariaDB. Incluye autenticación de usuarios, historial de contraseñas, panel de administración y análisis de fortaleza en tiempo real.

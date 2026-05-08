@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GENPASS Login</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+
+<style>
+
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+}
+
+body{
+    font-family:'Poppins',sans-serif;
+    background:#0b0f19;
+    min-height:100vh;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    color:white;
+    overflow:hidden;
+}
+
+/* FONDO */
+body::before{
+    content:'';
+    position:absolute;
+    width:600px;
+    height:600px;
+    background:#ffd70022;
+    filter:blur(120px);
+    border-radius:50%;
+    top:-200px;
+    right:-200px;
+}
+
+body::after{
+    content:'';
+    position:absolute;
+    width:500px;
+    height:500px;
+    background:#ffffff10;
+    filter:blur(100px);
+    border-radius:50%;
+    bottom:-200px;
+    left:-200px;
+}
+
+/* CONTENEDOR */
+.login-container{
+    position:relative;
+    z-index:2;
+    width:100%;
+    max-width:1100px;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:80px;
+    padding:40px;
+}
+
+/* IZQUIERDA */
+.left{
+    flex:1;
+}
+
+.left img{
+    width:420px;
+    max-width:100%;
+    margin-bottom:20px;
+    filter:drop-shadow(0 0 20px #ffd70088);
+}
+
+.left h1{
+    font-size:55px;
+    color:#ffd700;
+    margin-bottom:10px;
+}
+
+.left p{
+    font-size:22px;
+    color:#d1d5db;
+    line-height:1.5;
+}
+
+/* CARD LOGIN */
+.login-box{
+    width:400px;
+    background:#111827;
+    padding:35px;
+    border-radius:18px;
+    box-shadow:
+        0 0 20px #000,
+        0 0 40px #ffd70022;
+    border:1px solid #ffffff15;
+}
+
+.login-box h2{
+    text-align:center;
+    margin-bottom:25px;
+    color:#fff;
+}
+
+/* INPUTS */
+.input-group{
+    margin-bottom:18px;
+}
+
+.input-group input{
+    width:100%;
+    padding:16px;
+    border:none;
+    outline:none;
+    border-radius:10px;
+    background:#1f2937;
+    color:white;
+    font-size:16px;
+    transition:0.3s;
+}
+
+.input-group input:focus{
+    box-shadow:0 0 10px #ffd700aa;
+    border:1px solid #ffd700;
+}
+
+/* BOTON */
+.login-btn{
+    width:100%;
+    padding:15px;
+    border:none;
+    border-radius:10px;
+    background:#ffd700;
+    color:#000;
+    font-size:17px;
+    font-weight:bold;
+    cursor:pointer;
+    transition:0.3s;
+}
+
+.login-btn:hover{
+    transform:translateY(-2px);
+    box-shadow:
+        0 0 10px #ffd700,
+        0 0 20px #ffd70088;
+}
+
+/* LINKS */
+.extra{
+    margin-top:20px;
+    text-align:center;
+}
+
+.extra a{
+    color:#ffd700;
+    text-decoration:none;
+    font-size:14px;
+}
+
+.extra a:hover{
+    text-decoration:underline;
+}
+
+/* MOBILE */
+@media(max-width:900px){
+
+    .login-container{
+        flex-direction:column;
+        text-align:center;
+    }
+
+    .left h1{
+        font-size:40px;
+    }
+
+    .left p{
+        font-size:18px;
+    }
+
+    .login-box{
+        width:100%;
+        max-width:400px;
+    }
+}
+
+</style>
+</head>
+<body>
+
+<div class="login-container">
+
+    <!-- IZQUIERDA -->
+    <div class="left">
+
+        <!-- TU LOGO -->
+        <img src="static/logo.png" alt="GENPASS">
+
+        <h1>GENPASS</h1>
+
+        <p>
+            Sistema inteligente y seguro para la gestión
+            y generación de contraseñas modernas.
+        </p>
+
+    </div>
+
+    <!-- LOGIN -->
+    <div class="login-box">
+
+        <h2>Iniciar Sesión</h2>
+
+        <div class="input-group">
+            <input type="text" placeholder="Usuario">
+        </div>
+
+        <div class="input-group">
+            <input type="password" placeholder="Contraseña">
+        </div>
+
+        <button class="login-btn">
+            Entrar
+        </button>
+
+        <div class="extra">
+            <a href="#">¿Olvidaste tu contraseña?</a>
+        </div>
+
+    </div>
+
+</div>
+
+</body>
+</html>

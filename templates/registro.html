@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registro</title>
+
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+
+<body class="log-body">
+
+    <div class="login-container">
+
+        <!-- IZQUIERDA -->
+        <div class="left">
+
+            <img src="{{ url_for('static', filename='logo.png') }}" alt="GENPASS">
+
+            <h1>GENPASS</h1>
+
+            <p>
+                Crea una cuenta segura para comenzar
+                a administrar y proteger tus contraseñas.
+            </p>
+
+        </div>
+
+        <!-- REGISTRO -->
+        <div class="login-box">
+
+            <h2>Crear Cuenta</h2>
+            {% with messages = get_flashed_messages() %}
+            {% if messages %}
+            {% for message in messages %}
+            <div class="flash-message">
+                {{ message }}
+            </div>
+            {% endfor %}
+            {% endif %}
+            {% endwith %}
+
+            <form method="POST">
+
+                <div class="input-group">
+                    <input type="text" name="user" placeholder="Usuario" required>
+                </div>
+                <div class="input-group">
+                    <input type="password" name="password" placeholder="Contraseña" required>
+                </div>
+
+                <div class="input-group">
+                    <input type="password" name="confirm_password" placeholder="Confirmar Contraseña" required>
+                </div>
+
+                <button type="submit" class="login-btn">
+                    Registrarme
+                </button>
+
+            </form>
+
+            <div class="extra">
+                <a href="/login">Ya tengo cuenta</a>
+            </div>
+
+        </div>
+
+    </div>
+
+</body>
+
+</html>

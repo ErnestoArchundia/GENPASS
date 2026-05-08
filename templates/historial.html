@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+
+<html lang="es">
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta charset="UTF-8">
+<title>Historial</title>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+
+</head>
+
+<body>
+
+<div class="navbar">
+    <div class="nav-left">⚡ GENPASS</div>
+
+
+<div class="nav-user">
+    <i class="fa fa-user"></i>
+    {{user}} ⌄
+    <div class="dropdown">
+        <a href="/">
+            <i class="fa-solid fa-house"></i> Inicio
+        </a>
+        {% if rol == "Aministrador" %}
+        <a href="/admin">
+            <i class="fa-solid fa-user-shield"></i> Administrar
+        </a>
+        {% endif %}
+        <a href="/logout">
+            <i class="fa-solid fa-right-from-bracket"></i> Salir
+        </a>
+    </div>
+</div>
+</div>
+
+<div class="container">
+    <h1>Historial de contraseñas</h1>
+<div class="table">
+<table>
+    <thead>
+        <tr>
+            <th onclick="ordenarTabla(0)">Password</th>
+            <th onclick="ordenarTabla(1)">Fuerza</th>
+            <th onclick="ordenarTabla(2)">Score</th>
+            <th onclick="ordenarTabla(3)">Fecha</th>
+        </tr>
+    </thead>
+    <tbody data-asc="true">
+        {% for p in data %}
+        <tr>
+            <td>{{ p[0] }}</td>
+            <td class="
+    {% if p[1] == 'Muy débil' %}fuerza-muy-debil
+    {% elif p[1] == 'Débil' %}fuerza-debil
+    {% elif p[1] == 'Media' %}fuerza-media
+    {% elif p[1] == 'Segura' %}fuerza-segura
+    {% elif p[1] == 'Muy Segura' %}fuerza-muy-segura
+    {% endif %}
+">
+    {{ p[1] }}
+</td>
+            <td>{{ p[2] }}</td>
+            <td>{{ p[3] }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+</div>
+<button class="histo-button" onclick="borrarHistorial()"> Borrar Historial</button>
+</div>
+
+<script>
+function ordenarTabla(columna) {
+    let tabla = document.querySelector("tbody");
+    let filas = Array.from(tabla.rows);
+
+    let asc = tabla.getAttribute("data-asc") === "true";
+    tabla.setAttribute("data-asc", !asc);
+
+    filas.sort((a, b) => {
+        let A = a.cells[columna].innerText;
+        let B = b.cells[columna].innerText;
+
+        if (!isNaN(A) && !isNaN(B)) {
+            return asc ? A - B : B - A;
+        }
+        return asc ? A.localeCompare(B) : B.localeCompare(A);
+    });
+
+    filas.forEach(f => tabla.appendChild(f));
+}
+function borrarHistorial() {
+    if (!confirm("¿Seguro que quieres borrar todo el historial?")) return;
+
+    fetch("/borrar_historial", {
+        method: "POST"
+    })
+    .then(res => res.json())
+    .then(data => {
+        alert(data.mensaje || data.error);
+        location.reload();
+    })
+    .catch(err => {
+        console.error(err);
+        alert("Error al borrar historial");
+    });
+}
+</script>
+
+</body>
+</html>

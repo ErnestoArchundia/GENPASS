@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+
+<html lang="es">
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta charset="UTF-8">
+<title>Admin Panel</title>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <div class="navbar">
+    
+        <div class="nav-left">⚡ GENPASS</div>
+    
+        <div class="nav-center">
+           <h2>Panel de Administración</h2>
+        </div>
+    
+        <div class="nav-user" id="userMenu">
+            <i class="fa fa-user"></i>
+            {{user}} ⌄
+            <div class="dropdown">
+                <a href="/">
+                    <i class="fa-solid fa-house"></i> Inicio
+                </a>
+                <a href="/historial">
+                    <i class="fa fa-clock"></i>Historial
+                </a>
+                <a href="/logout">
+                    <i class="fa-solid fa-right-from-bracket"></i> Salir
+                </a>
+            </div>
+        </div>
+    
+    </div>
+<div class="admin-container">
+    <div class="admin-cards">
+
+        <div class="admin-card">
+            <h1>{{stats.usuarios}}</h1>
+            <p>Usuarios</p>
+        </div>
+    
+        <div class="admin-card">
+            <h1>{{stats.passwords}}</h1>
+            <p>Passwords generadas</p>
+        </div>
+    
+        <div class="admin-card">
+            <h1>{{stats.avg_score}}</h1>
+            <p>Promedio Score</p>
+        </div>
+    
+    </div>
+    <div class="admin-layout">
+
+        <!-- GRAFICA -->
+        <div class="chart-box">
+            <h2>📊 Estadísticas</h2>
+            <canvas id="grafica"></canvas>
+        </div>
+    
+        <!-- TABLA -->
+        <div class="table-box">
+            <h2>👥 Usuarios</h2>
+    
+            <table class="admin-table">
+                <tr>
+                    <th>ID</th>
+                    <th>Usuario</th>
+                    <th>Rol</th>
+                    <th>Acción</th>
+                </tr>
+    
+                {% for u in usuarios %}
+                <tr>
+                    <td>{{u.id}}</td>
+                    <td>{{u.usuario}}</td>
+                    <td>{{u.rol}}</td>
+                    <td>
+                        <button class="admin-button" onclick="eliminar({{u.id}})">Eliminar</button>
+                    </td>
+                </tr>
+                {% endfor %}
+            </table>
+        </div>
+    
+    </div>
+</div>
+
+
+<script>
+    const baseLabels = ["Muy débil", "Débil", "Media", "Segura", "Muy Segura"];
+    const baseData = {
+        "Muy débil": 0,
+        "Débil": 0,
+        "Media": 0,
+        "Segura": 0,
+        "Muy Segura": 0
+    };
+    
+    // datos reales
+    const statsData = {{ stats.fuerza | tojson }};
+    
+    // llenar valores
+    statsData.forEach(e => {
+        baseData[e[0]] = e[1];
+    });
+    
+    const labels = baseLabels;
+    const valores = baseLabels.map(l => baseData[l]);
+    
+    const colores = labels.map(f => {
+        if (f === "Muy débil") return "#ff0033";
+        if (f === "Débil") return "#ff6600";
+        if (f === "Media") return "#ffff00";
+        if (f === "Segura") return "#00ff9c";
+        if (f === "Muy Segura") return "#00ffff";
+    });
+    
+    new Chart(document.getElementById('grafica'), {
+        type: 'bar',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'Contraseñas',
+                data: valores,
+                backgroundColor: colores,
+                barPercentage: 0.6,
+                categoryPercentage: 0.6
+            }]
+        }
+    });
+    </script>
+
+</body>
+</html>
