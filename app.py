@@ -1,14 +1,11 @@
 from flask import Flask, render_template, request, jsonify, session, redirect, url_for, flash
 import secrets
 import string
-
-# 🔥 IMPORTAMOS MODELOS
 from modelos import guardar_historial, obtener_historial, borrar_historial, validar_usuario, obtener_usuarios, eliminar_usuario, obtener_estadisticas
 from conexion import conectar_db
-app = Flask(__name__)
-app.secret_key = "supersecretkey"
 
-# ------------------ LOGICA ------------------
+app = Flask(__name__)
+app.secret_key = secrets.token_hex(32)
 
 def shuffle(lista):
     for i in range(len(lista) - 1, 0, -1):
@@ -50,7 +47,6 @@ def medir_fuerza(pwd):
     niveles = ["Muy débil", "Débil", "Media", "Segura", "Muy Segura"]
     return niveles[min(score, 4)], score
 
-# ------------------ RUTAS ------------------
 @app.route("/login", methods=["GET", "POST"])
 def login():
     if request.method == "POST":
@@ -63,7 +59,6 @@ def login():
             session["user"] = data["usuario"]
             session["rol"] = data["rol"]
 
-            # 🔥 REDIRECCIÓN AUTOMÁTICA
             if data["rol"] == "admin":
                 return redirect("/admin")
             else:
@@ -86,9 +81,6 @@ def index():
     if "user" not in session:
         return redirect("/login")
     return render_template("index.html", user=session["user"])
-
-
-# ------------------ GENERAR ------------------
 
 @app.route("/generar", methods=["POST"])
 def generar_api():
@@ -116,16 +108,12 @@ def generar_api():
                 "score": score
             })
 
-            # 🔥 GUARDAR EN BD
             guardar_historial(user, pwd, fuerza, score)
 
         return jsonify(resultado)
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
-
-
-# ------------------ HISTORIAL ------------------
 
 @app.route("/historial")
 def ver_historial():
@@ -137,9 +125,6 @@ def ver_historial():
 
     return render_template("historial.html", data=data, user=user)
 
-
-# ------------------ BORRAR HISTORIAL (PRO) ------------------
-
 @app.route("/borrar_historial", methods=["POST"])
 def eliminar_historial():
     if "user" not in session:
@@ -149,7 +134,6 @@ def eliminar_historial():
     borrar_historial(user)
 
     return jsonify({"mensaje": "Historial eliminado"})
-
 
 @app.context_processor
 def inject_user():
@@ -181,7 +165,6 @@ def registro():
         password = request.form['password']
         confirm_password = request.form['confirm_password']
 
-        # Verificar contraseñas
         if password != confirm_password:
             flash("Las contraseñas no coinciden")
             return redirect(url_for('registro'))
@@ -210,7 +193,6 @@ def registro():
                 conexion.close()
 
     return render_template('registro.html')
-# ------------------ MAIN ------------------
 
 @app.route("/admin/delete_user/<int:user_id>", methods=["POST"])
 def delete_user(user_id):
