@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>GENPASS</title>
+
+    <!-- FUENTE -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+
+    <!-- FONT AWESOME -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+    <!-- CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+
+</head>
+
+<body class="log-body">
+
+    <!-- EFECTOS -->
+    <div class="bg-grid"></div>
+    <div class="bg-hex"></div>
+
+    <div class="login-container">
+
+        <!-- IZQUIERDA -->
+        <div class="left">
+
+            <img src="{{ url_for('static', filename='logov3.png') }}" alt="GENPASS">
+
+
+        </div>
+
+        <!-- LOGIN -->
+        <div class="login-box">
+            <div class="icon-separator">
+                <div class="icon-center">
+                    <i class="fa-solid fa-shield-halved"></i>
+                </div>
+            </div>
+
+            <h2>Iniciar Sesión</h2>
+
+            <form method="POST">
+
+                <!-- USUARIO -->
+                <div class="input-group">
+                    <i class="fa-regular fa-user"></i>
+                    <input name="user" placeholder="Usuario">
+                </div>
+
+                <!-- PASSWORD -->
+                <div class="input-group">
+                    <i class="fas fa-lock"></i>
+                    <input name="password" type="password" placeholder="Contraseña">
+                </div>
+
+                <!-- OPCIONES -->
+                <div class="options">
+
+                    <label>
+                        <input type="checkbox">
+                        Recordarme
+                    </label>
+
+                    <a href="#">
+                        ¿Olvidaste tu contraseña?
+                    </a>
+
+                </div>
+
+                <!-- BOTON -->
+                <button class="login-btn">
+
+                    Entrar
+
+                    <i class="fa-solid fa-arrow-right"></i>
+
+                </button>
+
+            </form>
+
+            <div class="separator">
+                <span>o</span>
+            </div>
+
+            <!-- REGISTRO -->
+            <div class="extra">
+
+                <a href="/registro">
+
+                    <i class="fa-solid fa-user-plus"></i>
+
+                    Registrarme
+
+                </a>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</body>
+
+</html>

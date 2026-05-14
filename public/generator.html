@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EAM Solutions | GenPaswords
+    </title>
+
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+
+<body>
+
+    <div class="navbar">
+
+        <div class="nav-left">
+
+            <img src="{{ url_for('static', filename='logov2.png') }}" alt="EAM Solutions Logo" class="nav-logo">
+
+        </div>
+
+        <div class="nav-center">
+
+            <a href="/scanner">
+                <i class="fa-solid fa-network-wired"></i>
+                Escaner
+            </a>
+
+            <a href="/sniffer">
+                <i class="fa-solid fa-wifi"></i>
+                Sniffer
+            </a>
+
+            <a href="/keylogger">
+                <i class="fa-solid fa-keyboard"></i>
+                Keylogger
+            </a>
+
+        </div>
+
+        <!-- USER -->
+        <div class="nav-user">
+
+            <i class="fa-solid fa-user"></i>
+            {{user}}
+
+            <div class="dropdown">
+
+                <a href="/">
+                    <i class="fa-solid fa-house"></i>
+                    Inicio
+                </a>
+
+                <a href="/historial">
+                    <i class="fa-solid fa-clock-rotate-left"></i>
+                    Historial
+                </a>
+
+                {% if rol == "Administrador" %}
+                <a href="/admin">
+                    <i class="fa-solid fa-user-shield"></i>
+                    Administrar
+                </a>
+                {% endif %}
+
+                <a href="/logout">
+                    <i class="fa-solid fa-right-from-bracket"></i>
+                    Salir
+                </a>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- MAIN -->
+    <section class="dashboard-page">
+
+        <!-- HEADER -->
+        <div class="dashboard-header">
+
+            <h1 class="dashboard-title">
+                <i class="fa-solid fa-key"></i>
+                Password Generator
+            </h1>
+
+            <p class="dashboard-subtitle">
+                Genera contraseñas seguras y avanzadas con EAM Solutions.
+            </p>
+
+        </div>
+
+        <!-- GENERADOR -->
+        <div class="generator-box">
+
+            <div class="generator-input">
+
+                <i class="fa-solid fa-layer-group"></i>
+
+                <input type="number" id="cantidad" placeholder="Cantidad de contraseñas">
+
+            </div>
+
+            <div class="generator-input">
+
+                <i class="fa-solid fa-lock"></i>
+
+                <input type="number" id="longitud" placeholder="Longitud mínima 8">
+
+            </div>
+
+            <button id="btn-generar" class="generator-btn">
+                <i class="fa-solid fa-bolt"></i>
+                GENERAR
+            </button>
+
+        </div>
+
+        <!-- RESULTADOS -->
+        <div id="resultado" class="grid"></div>
+
+    </section>
+
+    <!-- TOAST -->
+    <div id="toast" class="toast"></div>
+
+    <script>
+
+        function showToast(msg) {
+
+            const t = document.getElementById('toast');
+
+            t.innerText = msg;
+
+            t.style.display = 'block';
+
+            setTimeout(() => t.style.display = 'none', 2000);
+        }
+
+        function colorBar(score) {
+
+            if (score <= 2) {
+                return '#ff4d4d';
+            }
+
+            if (score == 3) {
+                return '#ffae00';
+            }
+
+            if (score == 4) {
+                return '#00ff6a';
+            }
+
+            return '#00ff6a';
+        }
+
+        function crearCard(p, i) {
+
+            const card = document.createElement("div");
+
+            card.className = "card";
+
+            card.innerHTML = `
+
+            <div class="card-header">
+
+                <span class="card-number">
+                    ${i + 1}
+                </span>
+
+                <span class="card-status">
+                    ${p.fuerza}
+                </span>
+
+            </div>
+
+            <div class="password-box">
+
+                <i class="fa-solid fa-lock"></i>
+
+                <span>${p.password}</span>
+
+            </div>
+
+            <div class="progress">
+
+                <div 
+                    class="bar" 
+                    style="
+                        width:${(p.score / 5) * 100}%;
+                        background:${colorBar(p.score)}
+                    ">
+                </div>
+
+            </div>
+
+            <button class="copy-btn">
+
+                <i class="fa-regular fa-copy"></i>
+
+                Copiar
+
+            </button>
+        `;
+
+            const btn = card.querySelector(".copy-btn");
+
+            btn.onclick = async () => {
+
+                await navigator.clipboard.writeText(p.password);
+
+                btn.innerHTML = `
+                    <i class="fa-solid fa-check"></i>
+                    Copiado
+                `;
+
+                showToast("📋 Contraseña copiada");
+
+                setTimeout(() => {
+
+                    btn.innerHTML = `
+                        <i class="fa-regular fa-copy"></i>
+                        Copiar
+                    `;
+
+                }, 1500);
+            };
+
+            return card;
+        }
+
+        function renderCards(data) {
+
+            const contenedor = document.getElementById("resultado");
+
+            contenedor.innerHTML = "";
+
+            data.forEach((p, i) => {
+
+                const card = crearCard(p, i);
+
+                contenedor.appendChild(card);
+
+                setTimeout(() => {
+
+                    card.classList.add("show");
+
+                }, i * 100);
+
+            });
+
+        }
+
+        document.getElementById("btn-generar").onclick = async () => {
+
+            let cantidad = document.getElementById('cantidad').value;
+
+            let longitud = document.getElementById('longitud').value;
+            if (cantidad < 1) {
+
+                showToast("Mínimo 1 contraseña");
+
+                return;
+            }
+            else if (longitud < 8) {
+
+                showToast("⚠️ Mínimo 8 caracteres");
+
+                return;
+            }
+
+            const res = await fetch('/generar', {
+
+                method: 'POST',
+
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+
+                body: JSON.stringify({
+                    cantidad,
+                    longitud
+                })
+            });
+
+            const data = await res.json();
+
+            if (data.error) {
+
+                showToast(data.error);
+
+                return;
+            }
+
+            renderCards(data);
+        };
+
+    </script>
+
+</body>
+
+</html>

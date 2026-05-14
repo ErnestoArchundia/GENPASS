@@ -3,9 +3,61 @@ import secrets
 import string
 from modelos import guardar_historial, obtener_historial, borrar_historial, validar_usuario, obtener_usuarios, eliminar_usuario, obtener_estadisticas
 from conexion import conectar_db
+from main import run_scan
+from reportpdf import generate_pdf
+
 
 app = Flask(__name__)
 app.secret_key = secrets.token_hex(32)
+
+progress = 0
+results_data = []
+
+from threading import  Lock
+import threading
+
+scan_lock = Lock()
+scan_finished = False
+
+
+def scan_thread(target):
+    global progress, results_data
+
+    def update(p):
+        global progress
+        progress = p
+
+    results_data = run_scan(target, update)
+    progress = 100
+
+@app.route("/scan", methods=["POST"])
+def scan():
+    global progress
+    progress = 0
+
+    target = request.form["target"]
+
+    thread = threading.Thread(target=scan_thread, args=(target,))
+    thread.start()
+
+    return jsonify({"status": "scanning"})
+
+@app.route("/progress")
+def get_progress():
+    global progress
+    return jsonify({"progress": progress})
+
+@app.route("/results")
+def results():
+    global results_data
+    return jsonify(results_data)
+
+@app.route("/download")
+def download():
+    global results_data
+    generate_pdf(results_data)
+
+    return jsonify({"status": "pdf generado"})
 
 def shuffle(lista):
     for i in range(len(lista) - 1, 0, -1):
@@ -155,6 +207,18 @@ def admin_panel():
 
     return render_template("admin.html", usuarios=usuarios, stats=stats)
 
+@app.route('/scanner')
+def scanner():
+    return render_template('scanner.html')
+
+@app.route('/generator')
+def generator():
+    return render_template('generator.html')
+
+@app.route('/keylogger')
+def keylogger():
+    return render_template('keylogger.html')
+
 
 @app.route('/registro', methods=['GET', 'POST'])
 def registro():
@@ -202,4 +266,4 @@ def delete_user(user_id):
     eliminar_usuario(user_id)
     return jsonify({"success": True})
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5000, debug=True)  
+    app.run(host="0.0.0.0", port=3000, debug=False)  

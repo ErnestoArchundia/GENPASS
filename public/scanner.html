@@ -1,0 +1,291 @@
+puesrto especifico, rango de puertos, todos los puertos
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>EAM Solutions | Scanner</title>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <link rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+
+<body>
+
+<div class="navbar">
+
+    <div class="nav-left">
+        <img src="{{ url_for('static', filename='logov2.png') }}" class="nav-logo">
+    </div>
+
+    <div class="nav-center">
+        <a href="/generator"><i class="fa-solid fa-key"></i> Generator</a>
+        <a href="/sniffer"><i class="fa-solid fa-wifi"></i> Sniffer</a>
+        <a href="/keylogger"><i class="fa-solid fa-keyboard"></i> Keylogger</a>
+    </div>
+
+    <div class="nav-user">
+        <i class="fa-solid fa-user"></i>
+        {{user}}
+
+        <div class="dropdown">
+            <a href="/"><i class="fa-solid fa-house"></i> Inicio</a>
+            <a href="/historial"><i class="fa-solid fa-clock-rotate-left"></i> Historial</a>
+
+            {% if rol == "Administrador" %}
+            <a href="/admin"><i class="fa-solid fa-user-shield"></i> Administrar</a>
+            {% endif %}
+
+            <a href="/logout"><i class="fa-solid fa-right-from-bracket"></i> Salir</a>
+        </div>
+    </div>
+
+</div>
+
+<div class="scanner-page">
+
+    <!-- SEARCH -->
+    <div class="scanner-search-box">
+
+        <div class="scanner-input-group">
+            <i class="fa-solid fa-globe"></i>
+            <input type="text" id="target" placeholder="IP o dominio objetivo">
+        </div>
+
+        <button class="scanner-btn" onclick="startScan()">
+            <i class="fa-solid fa-radar"></i>
+            Escanear
+        </button>
+
+    </div>
+
+    <!-- PROGRESS -->
+    <div class="scanner-progress-wrapper">
+        <div class="scanner-progress">
+            <div id="bar" class="scanner-bar">0%</div>
+        </div>
+    </div>
+
+    <!-- DASHBOARD -->
+    <div class="scanner-dashboard">
+
+        <!-- TABLA -->
+        <div class="scanner-table-box">
+
+            <div class="scanner-card-title">
+                <i class="fa-solid fa-shield-halved"></i>
+                Resultados del Escaneo
+            </div>
+
+            <table id="resultsTable">
+
+                <thead>
+                    <tr>
+                        <th>Puerto</th>
+                        <th>Servicio</th>
+                        <th>Vulnerabilidad</th>
+                    </tr>
+                </thead>
+
+                <tbody id="resultsBody"></tbody>
+
+            </table>
+
+        </div>
+
+        <!-- GRAFICAS -->
+        <div class="scanner-graphs">
+
+            <div class="scanner-chart-card">
+                <canvas id="chart"></canvas>
+            </div>
+
+            <div class="scanner-chart-card">
+                <canvas id="chartServicios"></canvas>
+            </div>
+
+            <div class="scanner-chart-card">
+                <canvas id="chartSeveridad"></canvas>
+            </div>
+
+        </div>
+
+    </div>
+</div>
+
+<script>
+function startScan() {
+    let target = document.getElementById("target").value.trim();
+    let btn = document.querySelector(".scanner-btn");
+
+    if (!target) return alert("Ingresa un objetivo");
+
+    btn.disabled = true;
+    document.getElementById("resultsBody").innerHTML = "";
+    document.getElementById("bar").style.width = "0%";
+    document.getElementById("bar").innerText = "0%";
+
+    // Agregamos un catch para ver el error exacto en consola
+    fetch("/scan", {
+        method: "POST",
+        headers: {"Content-Type": "application/x-www-form-urlencoded"},
+        body: "target=" + encodeURIComponent(target)
+    })
+    .then(response => {
+        if (!response.ok) throw new Error("Error en el servidor al iniciar scan");
+        updateProgress(btn);
+    })
+    .catch(err => {
+        console.error("Error en startScan:", err);
+        btn.disabled = false;
+    });
+}
+
+function updateProgress(btn) {
+    fetch("/progress")
+    .then(res => res.json())
+    .then(data => {
+        let bar = document.getElementById("bar");
+        let p = data.progress || 0;
+
+        bar.style.width = p + "%";
+        bar.innerText = p < 100 ? `Escaneando... ${p}%` : "✔ Completado";
+
+        if (p < 100) {
+            setTimeout(() => updateProgress(btn), 800);
+        } else {
+            // Pequeña pausa para asegurar que el backend guardó todo
+            setTimeout(loadResults, 1000); 
+            btn.disabled = false;
+        }
+    })
+    .catch(err => console.error("Error obteniendo progreso:", err));
+}
+function loadResults() {
+
+    fetch("/results")
+    .then(res => res.json())
+    .then(data => {
+
+        let tableBody = document.getElementById("resultsBody");
+        tableBody.innerHTML = "";
+
+        if (!data || data.length === 0) {
+            tableBody.innerHTML = `
+                <tr><td colspan="3">Sin resultados</td></tr>
+            `;
+            return;
+        }
+
+        let abiertos = 0;
+        let vulnerables = 0;
+
+        let servicios = {};
+        let severidad = { Critical: 0, High: 0, Medium: 0, Low: 0 };
+
+        data.forEach(r => {
+
+            let port = r.port || "";
+            let banner = r.banner || "";
+            let vuln = r.vuln || "Ninguna";
+
+            let row = document.createElement("tr");
+
+            row.innerHTML = `
+                <td>${port}</td>
+                <td>${banner}</td>
+                <td class="${vuln !== "Ninguna" ? "scanner-vuln" : "scanner-safe"}">
+                    ${vuln}
+                </td>
+            `;
+
+            tableBody.appendChild(row);
+
+            abiertos++;
+
+            if (vuln !== "Ninguna") {
+                vulnerables++;
+
+                let rand = Math.random();
+                if (rand < 0.25) severidad.Critical++;
+                else if (rand < 0.5) severidad.High++;
+                else if (rand < 0.75) severidad.Medium++;
+                else severidad.Low++;
+            }
+
+            let servicio = (banner.split(" ")[0] || "unknown");
+            servicios[servicio] = (servicios[servicio] || 0) + 1;
+        });
+
+        crearGrafica(abiertos, vulnerables);
+        crearGraficaServicios(servicios);
+        crearGraficaSeveridad(severidad);
+
+    })
+    .catch(err => console.error("results error:", err));
+}
+
+function crearGrafica(abiertos, vulnerables) {
+
+    let seguros = abiertos - vulnerables;
+
+    if (window.miGrafica) window.miGrafica.destroy();
+
+    window.miGrafica = new Chart(document.getElementById("chart"), {
+        type: "doughnut",
+        data: {
+            labels: ["Seguros", "Vulnerables"],
+            datasets: [{
+                data: [seguros, vulnerables],
+                backgroundColor: ["#22c55e", "#ef4444"]
+            }]
+        }
+    });
+}
+
+function crearGraficaServicios(servicios) {
+
+    if (window.chartServiciosObj)
+        window.chartServiciosObj.destroy();
+
+    window.chartServiciosObj = new Chart(
+        document.getElementById("chartServicios"),
+        {
+            type: "bar",
+            data: {
+                labels: Object.keys(servicios),
+                datasets: [{
+                    label: "Servicios",
+                    data: Object.values(servicios)
+                }]
+            }
+        }
+    );
+}
+
+function crearGraficaSeveridad(severidad) {
+
+    if (window.chartSeveridadObj)
+        window.chartSeveridadObj.destroy();
+
+    window.chartSeveridadObj = new Chart(
+        document.getElementById("chartSeveridad"),
+        {
+            type: "pie",
+            data: {
+                labels: Object.keys(severidad),
+                datasets: [{
+                    data: Object.values(severidad)
+                }]
+            }
+        }
+    );
+}
+</script>
+
+</body>
+</html>

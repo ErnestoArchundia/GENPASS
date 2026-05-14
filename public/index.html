@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EAM Solutions | Dashboard</title>
+
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+
+<body class="index-page">
+
+    <div class="navbar">
+
+        <div class="nav-left">
+
+            <img src="{{ url_for('static', filename='logov2.png') }}" alt="EAM Solutions Logo" class="nav-logo">
+
+        </div>
+
+        <div class="nav-center">
+
+            <a href="/generator">
+                <i class="fa-solid fa-key"></i>
+                Generator
+            </a>
+
+            <a href="/scanner">
+                <i class="fa-solid fa-network-wired"></i>
+                Escaner
+            </a>
+
+            <a href="/sniffer">
+                <i class="fa-solid fa-wifi"></i>
+                Sniffer
+            </a>
+
+            <a href="/keylogger">
+                <i class="fa-solid fa-keyboard"></i>
+                Keylogger
+            </a>
+
+        </div>
+
+        <!-- USER -->
+        <div class="nav-user">
+
+            <i class="fa-solid fa-user"></i>
+            {{user}}
+
+            <div class="dropdown">
+
+                <a href="/">
+                    <i class="fa-solid fa-house"></i>
+                    Inicio
+                </a>
+
+                <a href="/historial">
+                    <i class="fa-solid fa-clock-rotate-left"></i>
+                    Historial
+                </a>
+
+                {% if rol == "Administrador" %}
+                <a href="/admin">
+                    <i class="fa-solid fa-user-shield"></i>
+                    Administrar
+                </a>
+                {% endif %}
+
+                <a href="/logout">
+                    <i class="fa-solid fa-right-from-bracket"></i>
+                    Salir
+                </a>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <div class="index-main">
+        <div class="index-container">
+            <img src="{{ url_for('static', filename='index2.png') }}" alt="INDEX">
+        </div>
+        <div class="index-overlay">
+            <h1 class="dashboard-title">
+                Plataforma Integral de Ciberseguridad
+            </h1>
+
+            <p class="dashboard-subtitle">
+                Gestiona herramientas de generación de contraseñas, escaneo,
+                análisis de red y monitoreo desde un solo panel. </p>
+        </div>
+    </div>
+</body>
+
+</html>
+
+<!-- <h1 class="dashboard-title">
+    Plataforma Integral de Ciberseguridad
+</h1>
+
+<p class="dashboard-subtitle">
+    Gestiona herramientas de generación de contraseñas, escaneo,
+    análisis de red y monitoreo desde un solo panel. </p> -->
