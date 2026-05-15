@@ -98,9 +98,16 @@ io.on('connection', (socket) => {
   });
 });
 // Añade esto en app.js antes de server.listen
-app.get('/descargar-agente', (req, res) => {
-    const file = path.join(__dirname, 'bin', 'agente_eam.exe');
-    res.download(file); 
+// Ruta para Windows
+app.get('/descargar-windows', (req, res) => {
+    const file = path.join(__dirname, 'bin', 'agente_windows.exe');
+    res.download(file, 'EAM_Setup_Win.exe');
+});
+
+// Ruta para Linux
+app.get('/descargar-linux', (req, res) => {
+    const file = path.join(__dirname, 'bin', 'agente_linux');
+    res.download(file, 'EAM_Setup_Linux');
 });
 
 server.listen(PORT, () => {
