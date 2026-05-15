@@ -1,10 +1,10 @@
 from flask import Flask, render_template, request, jsonify, session, redirect, url_for, flash
 import secrets
 import string
-from modelos import guardar_historial, obtener_historial, borrar_historial, validar_usuario, obtener_usuarios, eliminar_usuario, obtener_estadisticas
-from conexion import conectar_db
-from main import run_scan
-from reportpdf import generate_pdf
+from servidor_flask.modelos import guardar_historial, obtener_historial, borrar_historial, validar_usuario, obtener_usuarios, eliminar_usuario, obtener_estadisticas
+from servidor_flask.conexion import conectar_db
+from servidor_flask.main import run_scan
+from servidor_flask.reportpdf import generate_pdf
 
 
 app = Flask(__name__)

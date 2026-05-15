@@ -1,4 +1,4 @@
-from conexion import conectar_db
+from servidor_flask.conexion import conectar_db
 
 # ------------------ HISTORIAL ------------------
 
@@ -76,7 +76,7 @@ def validar_usuario(usuario, password):
 
     return user  # ahora devuelve info completa
 
-from conexion import conectar_db
+from servidor_flask.conexion import conectar_db
 
 # ------------------ USUARIOS ------------------
 

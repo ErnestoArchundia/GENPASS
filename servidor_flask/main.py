@@ -1,5 +1,5 @@
-from nmap import run_nmap_realtime
-from report import load_vulns, check_vuln
+from servidor_flask.nmap import run_nmap_realtime
+from servidor_flask.report import load_vulns, check_vuln
 
 def run_scan(target, progress_callback=None):
 
