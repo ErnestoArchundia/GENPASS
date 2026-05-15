@@ -97,6 +97,11 @@ io.on('connection', (socket) => {
     console.log('🔌 Dispositivo desconectado');
   });
 });
+// Añade esto en app.js antes de server.listen
+app.get('/descargar-agente', (req, res) => {
+    const file = path.join(__dirname, 'bin', 'agente_eam.exe');
+    res.download(file); 
+});
 
 server.listen(PORT, () => {
   console.log(`\n🚀 SERVIDOR MAESTRO ACTIVO`);

